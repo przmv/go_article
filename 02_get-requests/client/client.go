@@ -115,20 +115,27 @@ func CheckResponse(resp *http.Response) error {
 	return fmt.Errorf("%s %s: %s", resp.Request.Method, resp.Request.URL, resp.Status)
 }
 
-func (c *HTTPClient) GetBlogPost(ctx context.Context, id int64) (string, error) {
+type BlogPost struct {
+	ID     int64  `json:"id"`
+	Title  string `json:"title"`
+	Body   string `json:"body"`
+	UserID int64  `json:"userId"`
+}
+
+func (c *HTTPClient) GetBlogPost(ctx context.Context, id int64) (*BlogPost, *http.Response, error) {
 	u := fmt.Sprintf("posts/%d", id)
 
 	req, err := c.NewRequest(http.MethodGet, u, nil)
 	if err != nil {
-		return "", err
+		return nil, nil, err
 	}
 
-	var b strings.Builder
-	resp, err := c.Do(ctx, req, &b)
+	b := new(BlogPost)
+	resp, err := c.Do(ctx, req, b)
 	if err != nil {
-		return "", err
+		return nil, nil, err
 	}
 	defer resp.Body.Close()
 
-	return b.String(), nil
+	return b, resp, nil
 }
